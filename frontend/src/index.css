@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar for chat feed */
+.chat-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: #888888;
+  border-radius: 2px;
+}
+
+/* Pulse animation for mic button */
+@keyframes mic-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+.mic-active {
+  animation: mic-pulse 1.5s ease-in-out infinite;
+}
+
+/* New message entrance: fades in and slides up slightly (~200ms ease-out) */
+@keyframes message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-message-enter {
+  animation: message-enter 200ms ease-out forwards;
+}
+
+/* Asset Card entrance: delayed ~100ms after preceding text message */
+@keyframes asset-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-asset-enter {
+  animation: asset-enter 200ms ease-out forwards;
+}
