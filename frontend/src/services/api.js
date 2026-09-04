@@ -3,7 +3,7 @@
  * Every function returns a promise that resolves to JSON data.
  */
 
-const BASE_URL = '/api';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 /**
  * Fetch all assets from the backend.
