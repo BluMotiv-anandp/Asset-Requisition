@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Mic, Send, Bot, User, Package } from 'lucide-react';
+import { Mic, Send, Bot, User, Package, Zap, Globe } from 'lucide-react';
 import { searchAssets, createRequest } from '../services/api';
 import '../index.css';
 
@@ -14,46 +14,35 @@ const CATEGORIES = [
 const MAX_RESULTS = 3;
 const CARD_STAGGER_MS = 80;
 
-/** Returns color class based on health score */
 function getHealthColor(score) {
-  if (score >= 80) return 'bg-green-600';
-  if (score >= 55) return 'bg-amber-500';
-  return 'bg-red-500';
+  if (score >= 80) return 'bg-emerald-500';
+  if (score >= 55) return 'bg-amber-400';
+  return 'bg-rose-500';
 }
 
-/** Returns text color class based on health score */
 function getHealthTextColor(score) {
-  if (score >= 80) return 'text-green-600';
-  if (score >= 55) return 'text-amber-500';
-  return 'text-red-500';
+  if (score >= 80) return 'text-emerald-500';
+  if (score >= 55) return 'text-amber-400';
+  return 'text-rose-500';
 }
 
-/**
- * SegmentedHealthBar — horizontal bar divided into 5 segments,
- * colored green/amber/red based on score.
- */
 function SegmentedHealthBar({ score }) {
   const segments = 5;
   const filled = Math.min(segments, Math.round((score / 100) * segments));
   const empty = segments - filled;
   const colorClass = getHealthColor(score);
   return (
-    <div className="flex gap-0.5">
+    <div className="flex gap-0.5 flex-1">
       {Array.from({ length: filled }).map((_, i) => (
         <div key={`f-${i}`} className={`h-2.5 flex-1 ${colorClass} rounded-sm`} />
       ))}
       {Array.from({ length: empty }).map((_, i) => (
-        <div key={`e-${i}`} className="h-2.5 flex-1 border border-border rounded-sm" />
+        <div key={`e-${i}`} className="h-2.5 flex-1 bg-slate-200 rounded-sm" />
       ))}
     </div>
   );
 }
 
-/**
- * AssetCard — styled card with category icon panel, colored health bar,
- * status badge, corner-bracket accents. Rows in consistent order:
- * Health, Distance, Location, Daily Rate, ETA.
- */
 function AssetCard({
   icon,
   name,
@@ -83,78 +72,80 @@ function AssetCard({
 
   return (
     <div
-      className="border border-border rounded-lg p-0 overflow-hidden max-w-xs animate-asset-enter"
+      className="bg-white rounded-2xl w-full shadow-card animate-asset-enter border border-slate-100"
       style={{ animationDelay: animationDelay || '0ms' }}
     >
-      {/* Corner-bracket accents top */}
-      <div className="flex justify-between px-3 pt-2 pb-0">
-        <span className="text-ink text-xs leading-none">╔</span>
-        <span className="text-ink text-xs leading-none">╗</span>
-      </div>
+      {/* Colored top accent stripe */}
+      <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-purple-500 to-teal-400" />
 
       {/* Icon panel + info */}
-      <div className="flex gap-3 p-3">
-        <div className="w-14 h-14 bg-ink text-paper rounded-lg flex items-center justify-center shrink-0">
-          {icon || <Package size={24} />}
+      <div className="flex gap-3 p-4">
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-md"
+          style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #7C3AED 100%)' }}
+        >
+          {icon || <Package size={22} className="text-white" />}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-ink text-sm leading-tight truncate">{name}</p>
-          <p className="text-xs text-muted">{assetCode} &middot; {category}</p>
-          {/* Status badge */}
-          <span className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-            isAvailable ? 'bg-green-50 text-green-700' : 'bg-neutral-100 text-muted'
-          }`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${isAvailable ? 'bg-green-500' : 'bg-muted'}`} />
-            {status}
-          </span>
+          <p className="font-semibold text-slate-800 text-sm leading-snug break-words">
+            {name}
+          </p>
+          <p className="text-xs text-slate-400 mt-0.5">
+            {assetCode} &middot; {category}
+          </p>
+          {isAvailable ? (
+            <span className="inline-flex items-center gap-1 mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide bg-emerald-500 text-white shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              {status}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide bg-slate-200 text-slate-500">
+              {status}
+            </span>
+          )}
         </div>
       </div>
 
       {/* Segmented health bar */}
-      <div className="px-3 pb-2">
+      <div className="px-4 pb-3">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted">Health</span>
+          <span className="text-xs text-slate-400 font-medium whitespace-nowrap">Health</span>
           <SegmentedHealthBar score={healthScore} />
-          <span className={`text-xs font-medium ${healthColor}`}>{healthScore}</span>
+          <span className={`text-xs font-bold ${healthColor} whitespace-nowrap`}>{healthScore}</span>
         </div>
       </div>
 
-      {/* Details — consistent order: Health, Distance, Location, Daily Rate, ETA */}
-      <div className="px-3 pb-2 space-y-1.5 text-sm text-ink">
-        <div className="flex justify-between">
-          <span className="text-muted">Distance</span>
-          <span>{Number(distanceKm)} km</span>
+      {/* Details */}
+      <div className="px-4 pb-3 space-y-2 text-sm">
+        <div className="flex justify-between items-center">
+          <span className="text-slate-400">Distance</span>
+          <span className="text-slate-700 font-medium">{Number(distanceKm)} km</span>
         </div>
         {locationLabel && (
-          <div className="flex justify-between">
-            <span className="text-muted">Location</span>
-            <span>{locationLabel}</span>
+          <div className="flex justify-between items-center">
+            <span className="text-slate-400">Location</span>
+            <span className="text-slate-700 font-medium text-right ml-2">{locationLabel}</span>
           </div>
         )}
-        <div className="flex justify-between">
-          <span className="text-muted">Daily Rate</span>
-          <span>${Number(dailyRate).toFixed(2)}</span>
+        <div className="flex justify-between items-center">
+          <span className="text-slate-400">Daily Rate</span>
+          <span className="text-slate-700 font-medium">${Number(dailyRate).toFixed(2)}</span>
         </div>
         {etaLabel && (
-          <div className="flex justify-between">
-            <span className="text-muted">ETA</span>
-            <span>{etaLabel}</span>
+          <div className="flex justify-between items-center">
+            <span className="text-slate-400">ETA</span>
+            <span className="text-slate-700 font-medium">{etaLabel}</span>
           </div>
         )}
       </div>
 
-      {/* Corner-bracket accents bottom */}
-      <div className="flex justify-between px-3 pb-2 pt-0">
-        <span className="text-ink text-xs leading-none">╚</span>
-        <span className="text-ink text-xs leading-none">╝</span>
-      </div>
-
-      {/* Request button */}
-      <div className="px-3 pb-3">
+      {/* Gradient Request button */}
+      <div className="px-4 pb-4">
         <button
           onClick={handleRequest}
           disabled={loading}
-          className="w-full bg-ink text-paper py-2 rounded text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-50"
+          className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 disabled:opacity-50 shadow-md hover:shadow-lg hover:brightness-110 active:scale-[0.98]"
+          style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #7C3AED 100%)' }}
         >
           {loading ? 'Requesting...' : 'Request Asset'}
         </button>
@@ -163,19 +154,17 @@ function AssetCard({
   );
 }
 
-/**
- * Translates common AI response snippets into a second language.
- * Only called on intro messages — returns null for everything else.
- */
 function translateSnippet(englishText) {
   if (typeof englishText !== 'string') return null;
   const translations = {
     'Found a match': { lang: 'es', text: 'Se encontró una coincidencia' },
     'Found 2 matches': { lang: 'es', text: 'Se encontraron 2 coincidencias' },
     'Found 3 matches': { lang: 'es', text: 'Se encontraron 3 coincidencias' },
-    'No assets found matching': { lang: 'es', text: 'No se encontraron activos que coincidan con' },
+    'No assets found matching': {
+      lang: 'es',
+      text: 'No se encontraron activos que coincidan con',
+    },
   };
-
   for (const [key, translation] of Object.entries(translations)) {
     if (englishText.includes(key)) {
       return { lang: translation.lang, text: translation.text };
@@ -186,22 +175,22 @@ function translateSnippet(englishText) {
 
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-1 text-muted text-sm py-2">
-      <div className="w-2 h-2 bg-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-      <div className="w-2 h-2 bg-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-      <div className="w-2 h-2 bg-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+    <div className="flex items-center gap-1.5 px-4 py-3 bg-white rounded-2xl rounded-bl-md shadow-bubble">
+      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+      <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+      <div className="w-2 h-2 bg-teal-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
     </div>
   );
 }
 
 function CategoryChips({ onSelect }) {
   return (
-    <div className="flex flex-wrap gap-2 mt-3 mb-2">
+    <div className="flex flex-wrap gap-2 mt-4 mb-4">
       {CATEGORIES.map(({ label, search }) => (
         <button
           key={search}
           onClick={() => onSelect(search)}
-          className="px-4 py-1.5 text-sm border border-ink text-ink rounded-full hover:bg-ink hover:text-paper transition-colors active:scale-95"
+          className="px-4 py-1.5 text-xs font-semibold border-2 border-white/30 text-white rounded-full hover:bg-white/20 backdrop-blur-sm transition-all duration-200 active:scale-95"
         >
           {label}
         </button>
@@ -210,13 +199,10 @@ function CategoryChips({ onSelect }) {
   );
 }
 
-/**
- * ChatMessage — renders a single message.
- * Translation snippet only shown on intro messages ("Found N matches").
- */
 function ChatMessage({ message, animationDelay }) {
   const isUser = message.role === 'user';
   const translation = !isUser ? translateSnippet(message.text) : null;
+  const hasText = !!message.text;
 
   return (
     <div
@@ -224,34 +210,46 @@ function ChatMessage({ message, animationDelay }) {
       style={animationDelay ? { animationDelay } : undefined}
     >
       {!isUser && (
-        <div className="w-8 h-8 rounded-full bg-ink text-paper flex items-center justify-center shrink-0">
-          <Bot size={16} />
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-md mt-1"
+          style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #7C3AED 100%)' }}
+        >
+          <Bot size={16} className="text-white" />
         </div>
       )}
 
       <div className={`max-w-[80%] ${isUser ? 'text-right' : 'text-left'}`}>
-        <div
-          className={`inline-block px-4 py-2 rounded-lg text-sm ${
-            isUser
-              ? 'bg-ink text-paper'
-              : 'bg-transparent text-ink'
-          }`}
-        >
-          {message.text}
-        </div>
-
-        {/* Translation badge — only on intro messages */}
-        {translation && (
-          <div className="flex items-center gap-2 mt-1.5">
-            <span className="inline-block px-1.5 py-0.5 bg-neutral-200 text-ink text-[10px] font-bold rounded uppercase">
-              {translation.lang}
-            </span>
-            <span className="text-xs text-muted">{translation.text}</span>
+        {/* Only render text bubble if there is text */}
+        {hasText && (
+          <div
+            className={`inline-block px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+              isUser
+                ? 'text-white rounded-br-md shadow-md'
+                : 'bg-white text-slate-700 rounded-bl-md shadow-bubble'
+            }`}
+            style={
+              isUser
+                ? { background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)' }
+                : undefined
+            }
+          >
+            {message.text}
           </div>
         )}
 
+        {/* Translation chip */}
+        {translation && (
+          <div className="flex items-center gap-2 mt-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full w-fit">
+            <Globe size={12} className="text-white/80" />
+            <span className="text-[11px] font-medium text-white/90">
+              {translation.text}
+            </span>
+          </div>
+        )}
+
+        {/* Asset card */}
         {message.asset && (
-          <div className="mt-2">
+          <div className="mt-3 w-full max-w-xs">
             <AssetCard
               name={message.asset.name}
               assetCode={message.asset.assetCode}
@@ -269,13 +267,16 @@ function ChatMessage({ message, animationDelay }) {
         )}
 
         {message.isError && (
-          <p className="text-xs text-muted mt-1">{message.errorText}</p>
+          <p className="text-xs text-white/60 mt-1">{message.errorText}</p>
         )}
       </div>
 
       {isUser && (
-        <div className="w-8 h-8 rounded-full bg-ink text-paper flex items-center justify-center shrink-0">
-          <User size={16} />
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-md mt-1"
+          style={{ background: 'linear-gradient(135deg, #F97316 0%, #EF4444 100%)' }}
+        >
+          <User size={16} className="text-white" />
         </div>
       )}
     </div>
@@ -294,19 +295,28 @@ function MessageInput({ onSend, onMicToggle, micActive, disabled }) {
     setText('');
   };
 
+  const canSend = text.trim().length > 0 && !disabled;
+
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-border p-3 bg-paper">
+    <form
+      onSubmit={handleSubmit}
+      className="flex items-center gap-2 p-3 bg-white rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.08)] border-t border-slate-100"
+    >
+      {/* Mic button — always visible */}
       <button
         type="button"
         onClick={onMicToggle}
-        className={`p-2 rounded-full transition-colors ${
-          micActive ? 'bg-ink text-paper mic-active' : 'text-muted hover:text-ink'
+        className={`p-2.5 rounded-full transition-all duration-200 shrink-0 ${
+          micActive
+            ? 'bg-gradient-to-br from-blue-500 to-purple-500 text-white shadow-md mic-active'
+            : 'text-slate-400 hover:text-blue-500 hover:bg-blue-50 active:scale-95'
         }`}
         title={micActive ? 'Stop listening' : 'Start voice input'}
       >
         <Mic size={20} />
       </button>
 
+      {/* Input field */}
       <input
         ref={inputRef}
         type="text"
@@ -314,13 +324,23 @@ function MessageInput({ onSend, onMicToggle, micActive, disabled }) {
         onChange={(e) => setText(e.target.value)}
         placeholder={micActive ? 'Listening...' : 'Type a message...'}
         disabled={disabled}
-        className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-ink transition-colors disabled:opacity-50"
+        className="flex-1 min-w-0 bg-slate-100 rounded-full px-4 py-2.5 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:bg-white transition-all duration-200 disabled:opacity-50"
       />
 
+      {/* Send button — always visible */}
       <button
         type="submit"
-        disabled={disabled || !text.trim()}
-        className="p-2 text-ink disabled:text-muted transition-colors"
+        disabled={!canSend}
+        className={`p-2.5 rounded-full transition-all duration-200 shrink-0 active:scale-95 ${
+          canSend
+            ? 'text-white shadow-md hover:shadow-lg hover:brightness-110'
+            : 'text-slate-300 cursor-default'
+        }`}
+        style={
+          canSend
+            ? { background: 'linear-gradient(135deg, #3B82F6 0%, #7C3AED 100%)' }
+            : { background: '#E2E8F0' }
+        }
         title="Send message"
       >
         <Send size={20} />
@@ -329,19 +349,15 @@ function MessageInput({ onSend, onMicToggle, micActive, disabled }) {
   );
 }
 
-/**
- * ChatFeed — manages messages, AI simulation, auto-scroll.
- */
 export default function ChatFeed() {
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [micActive, setMicActive] = useState(false);
-  const [showChips, setShowChips] = useState(true);
   const feedRef = useRef(null);
 
   useEffect(() => {
     if (feedRef.current) {
-      feedRef.current.scrollTop = feedRef.current.scrollHeight;
+      feedRef.current.scrollTo({ top: feedRef.current.scrollHeight, behavior: 'smooth' });
     }
   }, [messages, isTyping]);
 
@@ -423,7 +439,6 @@ export default function ChatFeed() {
   }, []);
 
   const handleSend = (text) => {
-    setShowChips(false);
     setMessages((prev) => [...prev, { id: Date.now(), role: 'user', text }]);
     simulateAI(text);
   };
@@ -437,32 +452,54 @@ export default function ChatFeed() {
       {
         id: 0,
         role: 'ai',
-        text: 'Hello! I\'m your Field Ops assistant. Tell me what equipment you need — type or use the mic — and I\'ll find the best match.',
+        text: "Hello! I'm your Field Ops assistant. Tell me what equipment you need — type or use the mic — and I'll find the best match.",
       },
     ]);
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-paper">
-      <header className="border-b border-border px-4 py-3 bg-paper">
-        <h1 className="text-lg font-semibold text-ink">Field Ops Asset Requisition</h1>
-        <p className="text-xs text-muted">AI-powered equipment assistant</p>
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <header className="relative px-4 py-3 bg-white shadow-sm shrink-0">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-teal-400" />
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md shrink-0"
+            style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #7C3AED 100%)' }}
+          >
+            <Zap size={20} className="text-white" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-[15px] font-bold text-slate-800 leading-tight truncate">
+              Field Ops Asset Requisition
+            </h1>
+            <p className="text-[11px] text-slate-400 font-medium">AI-powered equipment assistant</p>
+          </div>
+        </div>
       </header>
 
-      <div ref={feedRef} className="flex-1 overflow-y-auto chat-scroll px-4 py-4">
+      {/* Chat area */}
+      <div
+        ref={feedRef}
+        className="flex-1 overflow-y-auto chat-scroll px-4 pt-4 pb-6"
+        style={{ background: 'linear-gradient(180deg, #4C1D95 0%, #2E1065 30%, #0D9488 100%)' }}
+      >
         {messages.map((msg) => {
           const delay = msg.animationDelay || undefined;
           return <ChatMessage key={msg.id} message={msg} animationDelay={delay} />;
         })}
 
-        {showChips && messages.length > 0 && !isTyping && (
+        {messages.length > 0 && !isTyping && (
           <CategoryChips onSelect={handleSend} />
         )}
 
         {isTyping && (
           <div className="flex gap-3 justify-start mb-4">
-            <div className="w-8 h-8 rounded-full bg-ink text-paper flex items-center justify-center shrink-0">
-              <Bot size={16} />
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-md mt-1"
+              style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #7C3AED 100%)' }}
+            >
+              <Bot size={16} className="text-white" />
             </div>
             <TypingIndicator />
           </div>
